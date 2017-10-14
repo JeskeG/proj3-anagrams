@@ -80,34 +80,66 @@
 <br />
 <div class="row">
   <div class="col-xs-6 text-center">
-  <form id="entry" method="POST" action="/_check">
+  <form id="entry" method="POST" action="/_checkword">
     <label for="attempt">Word:</label>
     <input id="attempt" name="attempt" type="text" width="15"
       autocomplete="off"  autofocus />
-    <input type="submit" name="try" />
   </form>
 </div></div>
 
 <br />
+<div class="row">
+  <div class="col-xs-6 text-center">
+      <p id="response"> </p>
+  </div></div><div class="row">
+  <div class="col-xs-6 text-center">
+      <p id="success"> </p>
+  </div></div>
 
-{% if session.matches|length is not equalto 0  %}
-<h2>You found </h2>
-<p id="results">
-  {% for match in session.matches %}
-  {{ match }} 
-  {% endfor %}
-</p>
-{% endif %}
+<script>
 
 
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <!-- Mismatch, already found, etc. "flashed" from Python -->
-    {% for message in messages %}
-      <p class="message">{{ message }}</p>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
+// Suppress normal form submission, ignore enters and such
+$("#entry").submit( function(event) {
+   event.preventDefault();
+  });
+
+// We use 'keyup' because the form value
+// is updated before that event is generated.
+// keypress is triggered before the input field has been
+// updated.  Be aware that we'll see non-character keys like
+// shift and control, so make sure whatever you do with the
+// event does not depend on it being a letter.
+//
+$("#attempt").keyup(function(event) {
+   var txt = $("#attempt").val();  // Current content of the input field
+   var keycode = event.which;      // They key that just went up
+   var letter = String.fromCharCode(keycode);
+
+   if (! "ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(letter)) { return } //ignores keystrokes that aren't letters
+
+   $.getJSON( "/_checkword", { text: txt },
+              function(data)
+              {
+                rsval = data.result.matches;
+                console.log("rsval: " + rsval);
+                if (rsval)
+                {
+                   $("#response").html(rsval);
+                   $("#attempt").val("");
+                }
+                if (rsval.length >= session.target_count)
+                {
+                    $("#success").html("Success!");
+                }
+                //something to fix later, unsure why this won't print, but an extra frill for this project
+               }
+           );
+   });
+
+
+
+</script>
 
 
 
